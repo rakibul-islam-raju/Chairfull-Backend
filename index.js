@@ -119,10 +119,56 @@ async function run() {
 			res.send(result);
 		});
 
-		// post api [REVIEW]
+		// post api [ORDER]
 		app.post("/orders", async (req, res) => {
 			const order = req.body;
 			const result = await ordersCollection.insertOne(order);
+			res.send(result);
+		});
+
+		// list api [ORDER]
+		app.get("/orders", async (req, res) => {
+			const email = req.query.email;
+			const filter = { email: email };
+			let result;
+			if (email) {
+				result = await ordersCollection
+					.find(filter)
+					.sort({ _id: -1 })
+					.toArray();
+			} else {
+				result = await ordersCollection
+					.find({})
+					.sort({ _id: -1 })
+					.toArray();
+			}
+			res.send(result);
+		});
+
+		// update status api [ORDER]
+		app.put("/orders/:id", async (req, res) => {
+			const _id = req.params.id;
+			const updatedOrder = req.body;
+			const filter = { _id: ObjectId(_id) };
+			const options = { upsert: true };
+			const updateDoc = {
+				$set: {
+					status: updatedOrder.status,
+				},
+			};
+			const result = await ordersCollection.updateOne(
+				filter,
+				updateDoc,
+				options
+			);
+			res.send(result);
+		});
+
+		// delete api [ORDER]
+		app.delete("/orders/:id", async (req, res) => {
+			const _id = req.params.id;
+			const query = { _id: ObjectId(_id) };
+			const result = await ordersCollection.deleteOne(query);
 			res.send(result);
 		});
 	} finally {
